@@ -2,12 +2,17 @@
 
 /** Shared config for application; can be required many places. */
 
-require("dotenv").config();
+const dotenvConfig = { path: process.env.NODE_ENV ? ".env." + process.env.NODE_ENV : ".env" }
+require("dotenv").config(dotenvConfig)
 require("colors");
 
 const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
 
+const DB_USERNAME = process.env.DB_USERNAME
+const DB_PASSWORD = process.env.DB_PASSWORD 
+
 const PORT = +process.env.PORT || 3001;
+
 
 // Use dev database, testing database, or via env var, production database
 function getDatabaseUri() {
@@ -32,5 +37,7 @@ module.exports = {
   SECRET_KEY,
   PORT,
   BCRYPT_WORK_FACTOR,
-  getDatabaseUri,
+  DB_USERNAME,
+  DB_PASSWORD,
+  getDatabaseUri
 };
