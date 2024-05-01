@@ -9,3 +9,8 @@ To run this:
 To run the tests:
 
     jest -i
+
+
+To maintain authorization, you will need to add a header to each request, with key-value:
+authorization: Bearer [token]
+
