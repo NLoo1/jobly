@@ -1,6 +1,9 @@
+require('dotenv').config({ path: "../config.js" });
+
+
 "use strict";
 
-const request = require("supertest");
+// const request = require("supertest");
 
 const app = require("../app");
 

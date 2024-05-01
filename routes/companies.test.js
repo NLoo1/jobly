@@ -1,9 +1,16 @@
+require('dotenv').config({ path: "../.env.test" });
+
+
 "use strict";
+
+// process.env.NODE_ENV = "production"
 
 const request = require("supertest");
 
 const db = require("../db");
 const app = require("../app");
+
+
 
 const {
   commonBeforeAll,
@@ -94,7 +101,22 @@ describe("GET /companies", function () {
             },
           ],
     });
+
   });
+
+  test('ok for filters', async function(){
+    const resp = await request(app).get("/companies").query({
+      'minEmployees': 5,
+      'maxEmployees': 200,
+      'nameLike': 'davis'
+    });
+
+
+    expect(resp.body).toEqual({
+      filtered_companies: []
+    })
+    // console.log(resp.body)
+  })
 
   test("fails: test next() handler", async function () {
     // there's no normal failure event which will cause this route to fail ---

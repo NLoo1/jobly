@@ -51,6 +51,12 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
+    const { minEmployees, maxEmployees, nameLike } = req.query;
+
+    if (!minEmployees || !maxEmployees || !nameLike) {
+      const companies = await Company.findAll();
+      return res.json({ companies });
+    } else{
 
     // Going by the assumption that queries can ONLY be minEmployees, maxEmployees, and/or nameLike
 
@@ -115,6 +121,7 @@ router.get("/", async function (req, res, next) {
       );
     });
     return res.json({ filtered_companies });
+    }
   } catch (err) {
     return next(err);
   }
