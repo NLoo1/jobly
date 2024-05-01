@@ -54,13 +54,18 @@ router.get("/", async function (req, res, next) {
 
     // Going by the assumption that queries can ONLY be minEmployees, maxEmployees, and/or nameLike
 
+    // TESTING: Refactor to move filtering to model and avoid getting all companies THEN filtering
+    // const filters = Object.entries(req.query)
+    const test = await Company.filter(req.query)
+
+
     const minEmployees = parseInt(req.query.minEmployees);
     const maxEmployees = parseInt(req.query.maxEmployees);
     const nameLike = req.query.nameLike;
 
-    console.log("MIN MAX EMPLOYEES");
-    console.log(minEmployees);
-    console.log(maxEmployees);
+    // console.log("MIN MAX EMPLOYEES");
+    // console.log(minEmployees);
+    // console.log(maxEmployees);
 
     // Edge case: minEmployees or maxEmployees < 0
     if (
@@ -72,9 +77,7 @@ router.get("/", async function (req, res, next) {
     }
     // Edge case: minEmployees > maxEmployees
     if (minEmployees && maxEmployees && (minEmployees > maxEmployees)) {
-      // console.log("MIN MAX EMPLOYEES");
-      // console.log(minEmployees);
-      // console.log(maxEmployees);
+
       throw new ExpressError(
         "minEmployees cannot be more than maxEmployees",
         400
