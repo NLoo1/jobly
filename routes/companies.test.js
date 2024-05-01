@@ -104,7 +104,27 @@ describe("GET /companies", function () {
 
   });
 
-  test('ok for filters', async function(){
+  test ('ok for filters', async function(){
+    const resp = await request(app).get("/companies").query({
+      'minEmployees': 1,
+      'maxEmployees': 200,
+      'nameLike': 'c3'
+    });
+
+
+    expect(resp.body).toEqual({
+      filtered_companies: [
+        {
+          "description": "Desc3",
+          "handle": "c3",
+          "logoUrl": "http://c3.img",
+          "name": "C3",
+          "numEmployees": 3
+      }
+      ]
+    })
+  })
+  test('ok for filters with no results', async function(){
     const resp = await request(app).get("/companies").query({
       'minEmployees': 5,
       'maxEmployees': 200,
