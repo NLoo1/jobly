@@ -6,7 +6,7 @@ const jsonschema = require("jsonschema");
 const express = require("express");
 
 const { BadRequestError, ExpressError } = require("../expressError");
-const { ensureLoggedIn } = require("../middleware/auth");
+const { ensureLoggedIn, isAdmin } = require("../middleware/auth");
 const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
@@ -20,10 +20,10 @@ const router = new express.Router();
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
- * Authorization required: login
+ * Authorization required: admin
  */
 
-router.post("/", ensureLoggedIn, async function (req, res, next) {
+router.post("/", isAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyNewSchema);
     if (!validator.valid) {
@@ -51,22 +51,16 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    const { minEmployees, maxEmployees, nameLike } = req.query;
-
-    if (!minEmployees || !maxEmployees || !nameLike) {
+    if (Object.keys(req.query).length === 0) {
       const companies = await Company.findAll();
       return res.json({ companies });
     } else{
 
     // Going by the assumption that queries can ONLY be minEmployees, maxEmployees, and/or nameLike
 
-    const minEmployees = parseInt(req.query.minEmployees);
-    const maxEmployees = parseInt(req.query.maxEmployees);
+    const minEmployees = parseInt(req.query.minEmployees) || 0;
+    const maxEmployees = parseInt(req.query.maxEmployees) || 9999999;
     const nameLike = req.query.nameLike;
-
-    console.log("MIN MAX EMPLOYEES");
-    console.log(minEmployees);
-    console.log(maxEmployees);
 
     // Edge case: minEmployees or maxEmployees < 0
     if (
@@ -78,9 +72,6 @@ router.get("/", async function (req, res, next) {
     }
     // Edge case: minEmployees > maxEmployees
     if (minEmployees && maxEmployees && (minEmployees > maxEmployees)) {
-      // console.log("MIN MAX EMPLOYEES");
-      // console.log(minEmployees);
-      // console.log(maxEmployees);
       throw new ExpressError(
         "minEmployees cannot be more than maxEmployees",
         400
@@ -107,14 +98,12 @@ router.get("/", async function (req, res, next) {
         passMaxEmployeesCheck = company.numEmployees <= maxEmployees;
       }
 
-      if (nameLike !== undefined) {
+      if (nameLike !== undefined && nameLike.trim() !== "") {
         let lowercaseCompanyName = company.name.toLowerCase();
-        let lowercaseNameLike = nameLike.toLowerCase();
+        let lowercaseNameLike = nameLike.toLowerCase().trim(); // Ensure trimmed lowercase query
         passNameLikeCheck = lowercaseCompanyName.includes(lowercaseNameLike);
-        passNameLikeCheck =
-          company.name.toLowerCase().includes(nameLike.toLowerCase()) &&
-          nameLike !== "";
-      }
+    }
+    
 
       return (
         passMinEmployeesCheck && passMaxEmployeesCheck && passNameLikeCheck
@@ -152,10 +141,10 @@ router.get("/:handle", async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login
+ * Authorization required: admin
  */
 
-router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
+router.patch("/:handle", isAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyUpdateSchema);
     if (!validator.valid) {
@@ -172,10 +161,10 @@ router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
 
 /** DELETE /[handle]  =>  { deleted: handle }
  *
- * Authorization: login
+ * Authorization: admin
  */
 
-router.delete("/:handle", ensureLoggedIn, async function (req, res, next) {
+router.delete("/:handle", isAdmin, async function (req, res, next) {
   try {
     await Company.remove(req.params.handle);
     return res.json({ deleted: req.params.handle });
