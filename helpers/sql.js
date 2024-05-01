@@ -18,6 +18,7 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
 
   // Using keys, cols is a map of dataToUpdate.
   // The key is named using matching keys in jsToSql.
+  // If jsToSql does not have colName, default to standard colName
 
   // {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
   const cols = keys.map((colName, idx) =>
