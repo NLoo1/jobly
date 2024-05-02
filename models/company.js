@@ -51,60 +51,60 @@ class Company {
    * @return Companies that meet filter criteria.
    */
 
-  static async filter(filters) {
-    console.log(filters);
+  // static async filter(filters) {
+  //   console.log(filters);
 
-    const validFilters = [
-      "minEmployees",
-      "maxEmployees",
-      "nameLike"
-    ];
+  //   const validFilters = [
+  //     "minEmployees",
+  //     "maxEmployees",
+  //     "nameLike"
+  //   ];
 
-    const cols = Object.keys(filters)
+  //   const cols = Object.keys(filters)
 
-    // Validation
-    for(let i = 0; i < cols.length; i++){
-      if(!(validFilters.includes(cols[i]))){
-        throw new ExpressError(`${cols[i]} not in valid filters`, 400)
-      }
-    }
+  //   // Validation
+  //   for(let i = 0; i < cols.length; i++){
+  //     if(!(validFilters.includes(cols[i]))){
+  //       throw new ExpressError(`${cols[i]} not in valid filters`, 400)
+  //     }
+  //   }
 
 
-    // console.log(cols)
+  //   // console.log(cols)
 
-    // cols.forEach(col => {
-    //   switch(col) {
-    //     case 'minEmployees':
-    //       console.log('has min employees');
-    //       break;
-    //     case 'maxEmployees':
-    //       console.log('has max employees');
-    //       break;
-    //     case 'nameLike':
-    //       console.log('has name like');
-    //       break;
-    //   }
-    // });
+  //   // cols.forEach(col => {
+  //   //   switch(col) {
+  //   //     case 'minEmployees':
+  //   //       console.log('has min employees');
+  //   //       break;
+  //   //     case 'maxEmployees':
+  //   //       console.log('has max employees');
+  //   //       break;
+  //   //     case 'nameLike':
+  //   //       console.log('has name like');
+  //   //       break;
+  //   //   }
+  //   // });
 
-    let query = 'SELECT * FROM companies WHERE 1=1';
-    const params = [];
+  //   let query = 'SELECT * FROM companies WHERE 1=1';
+  //   const params = [];
     
-    if (filters.minEmployees !== undefined) {
-      query += ' AND num_employees >= ?';
-      params.push(filters.minEmployees);
-    }
+  //   if (filters.minEmployees !== undefined) {
+  //     query += ' AND num_employees >= ?';
+  //     params.push(filters.minEmployees);
+  //   }
     
-    if (filters.maxEmployees !== undefined) {
-      query += ' AND num_employees <= ?';
-      params.push(filters.maxEmployees);
-    }
+  //   if (filters.maxEmployees !== undefined) {
+  //     query += ' AND num_employees <= ?';
+  //     params.push(filters.maxEmployees);
+  //   }
     
-    if (filters.nameLike !== undefined) {
-      query += ' AND name LIKE ?';
-      params.push(`%${filters.nameLike}%`);
-    }
+  //   if (filters.nameLike !== undefined) {
+  //     query += ' AND name LIKE ?';
+  //     params.push(`%${filters.nameLike}%`);
+  //   }
     
-    const companies = await db.query(query, params);
+  //   const companies = await db.query(query, params);
     
     
     
@@ -124,7 +124,52 @@ class Company {
     //        AND name LIKE ${filters[nameLike]}
     //        ORDER BY name`);
 
+  
+
+    static async getCompanies(nameLike, minEmployees, maxEmployees) {
+      // Construct base query
+      let query = 'SELECT * FROM companies WHERE 1=1';
+  
+      const params = [];
+  
+      // Define an object to map parameter names to their positions in the query
+      const paramMapping = {
+          minEmployees: { name: 'num_employees', operator: '>=' },
+          maxEmployees: { name: 'num_employees', operator: '<=' },
+          nameLike: { name: 'name', operator: 'ILIKE' }
+      };
+  
+      // Iterate over parameters and add conditions to the query and parameters array
+      Object.keys(paramMapping).forEach((param, index) => {
+          const paramInfo = paramMapping[param];
+          const value = eval(param); // Dynamically access parameter value
+          
+          if (value !== undefined) {
+              if(paramInfo.name === 'name') {
+                  query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
+                  params.push(`%${value}%`); // Add wildcard for ILIKE comparison
+              } else {
+                  query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
+                  params.push(value);
+              }
+          }
+      });
+  
+      try {
+          // Execute the query with parameters
+          const companies = await db.query(query, params);
+          return companies.rows;
+      } catch (error) {
+          throw new Error(`Error executing query: ${error.message}`);
+      }
   }
+  
+  
+  
+  
+  
+
+
     
   
 

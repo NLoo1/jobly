@@ -50,77 +50,22 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  */
 
 router.get("/", async function (req, res, next) {
-  try {
 
-    // Going by the assumption that queries can ONLY be minEmployees, maxEmployees, and/or nameLike
+    console.log(req.query)
+    const { nameLike, minEmployees, maxEmployees } = req.query;
 
-    // TESTING: Refactor to move filtering to model and avoid getting all companies THEN filtering
-    // const filters = Object.entries(req.query)
-    const test = await Company.filter(req.query)
-
-
-    const minEmployees = parseInt(req.query.minEmployees);
-    const maxEmployees = parseInt(req.query.maxEmployees);
-    const nameLike = req.query.nameLike;
-
-    // console.log("MIN MAX EMPLOYEES");
-    // console.log(minEmployees);
-    // console.log(maxEmployees);
-
-    // Edge case: minEmployees or maxEmployees < 0
-    if (
-      minEmployees &&
-      maxEmployees &&
-      (minEmployees < 0 || maxEmployees < 0)
-    ) {
-      throw new ExpressError("minEmployees or maxEmployees is negative", 400);
-    }
-    // Edge case: minEmployees > maxEmployees
-    if (minEmployees && maxEmployees && (minEmployees > maxEmployees)) {
-
-      throw new ExpressError(
-        "minEmployees cannot be more than maxEmployees",
-        400
-      );
+    // Validate minEmployees and maxEmployees parameters
+    if (minEmployees !== undefined && maxEmployees !== undefined && parseInt(minEmployees) > parseInt(maxEmployees)) {
+        return res.status(400).json({ error: 'minEmployees cannot be greater than maxEmployees' });
     }
 
-
-    const companies = await Company.findAll();
-
-
-    const filtered_companies = companies.filter((company) => {
-
-      let passMinEmployeesCheck = true;
-      let passMaxEmployeesCheck = true;
-      let passNameLikeCheck = true;
-
-      // If minEmployees is passed, compare employees to minEmployees.
-      // Keep true if number of employees meets requirements
-      if (minEmployees !== undefined) {
-        passMinEmployeesCheck = company.numEmployees >= minEmployees;
-      }
-
-      if (maxEmployees !== undefined) {
-        passMaxEmployeesCheck = company.numEmployees <= maxEmployees;
-      }
-
-      if (nameLike !== undefined) {
-        let lowercaseCompanyName = company.name.toLowerCase();
-        let lowercaseNameLike = nameLike.toLowerCase();
-        passNameLikeCheck = lowercaseCompanyName.includes(lowercaseNameLike);
-        passNameLikeCheck =
-          company.name.toLowerCase().includes(nameLike.toLowerCase()) &&
-          nameLike !== "";
-      }
-
-      return (
-        passMinEmployeesCheck && passMaxEmployeesCheck && passNameLikeCheck
-      );
-    });
-    return res.json({ filtered_companies });
-  } catch (err) {
-    return next(err);
-  }
+    try {
+        // Fetch companies based on filtering criteria
+        const companies = await Company.getCompanies(nameLike, minEmployees, maxEmployees);
+        return res.json(companies);
+    } catch (err) {
+        return next(err)
+    }
 });
 
 /** GET /[handle]  =>  { company }
