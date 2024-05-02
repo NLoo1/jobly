@@ -52,6 +52,7 @@ router.post("/token", async function (req, res, next) {
 router.post("/register", async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, userRegisterSchema);
+    // console.log
     if (!validator.valid) {
       const errs = validator.errors.map((e) => e.stack);
       throw new BadRequestError(errs);
@@ -60,7 +61,7 @@ router.post("/register", async function (req, res, next) {
     const newUser = await User.register({ ...req.body, isAdmin: false });
     const token = createToken(newUser);
 
-    res.locals.user = username;
+    res.locals.user = req.params.username;
     res.locals.token = token;
 
     return res.status(201).json({ token });

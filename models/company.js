@@ -61,6 +61,51 @@ class Company {
     return companiesRes.rows;
   }
 
+  /** Get companies based on query parameters.
+   *
+   * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
+   * */
+
+  static async getCompanies(nameLike, minEmployees, maxEmployees) {
+
+    // Base query
+    // WARNING: This could be dangerous for SQL injections
+    let query = 'SELECT * FROM companies WHERE 1=1';
+
+    const params = [];
+
+    // Map possible params
+    const paramMapping = {
+        minEmployees: { name: 'num_employees', operator: '>=' },
+        maxEmployees: { name: 'num_employees', operator: '<=' },
+        nameLike: { name: 'name', operator: 'ILIKE' }
+    };
+
+    // Go through params to add conditions to query and push to params array
+    Object.keys(paramMapping).forEach((param, index) => {
+        const paramInfo = paramMapping[param];
+        const value = eval(param);
+        
+        if (value !== undefined) {
+            if(paramInfo.name === 'name') {
+                query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
+                params.push(`%${value}%`); // Add wildcard for ILIKE comparison
+            } else {
+                query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
+                params.push(value);
+            }
+        }
+    });
+
+    try {
+        const companies = await db.query(query, params);
+        return companies.rows;
+    } catch (error) {
+        throw new Error(`Error executing query: ${error.message}`);
+    }
+}
+
+
   /** Given a company handle, return data about company.
    *
    * Returns { handle, name, description, numEmployees, logoUrl, jobs }
