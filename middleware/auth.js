@@ -42,6 +42,11 @@ function ensureLoggedIn(req, res, next) {
   }
 }
 
+
+/** Checks if user is an admin.
+ *
+ * If not, raises Unauthorized.
+ */
 function isAdmin(req,res,next){
   try{
     if(!res.locals.user) throw new UnauthorizedError();
@@ -52,8 +57,34 @@ function isAdmin(req,res,next){
 }
 
 
+/** Checks if user is admin or the same user as in URL.
+ *
+ * If not, raises Unauthorized.
+ */
+function isUserOrAdmin(req, res, next) {
+  try {
+      if(!res.locals.user) throw new UnauthorizedError("Not logged in");
+      const requestedUsername = req.params.username;
+      const loggedInUser = res.locals.user;
+
+      if (loggedInUser.username === requestedUsername || loggedInUser.isAdmin) {
+          // User is the same as the requested user OR is an admin
+          return next();
+      } else {
+          throw new UnauthorizedError();
+      }
+      
+  } catch (err) {
+      return next(err);
+  }
+}
+
+
+
+
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
-  isAdmin
+  isAdmin,
+  isUserOrAdmin
 };

@@ -6,7 +6,7 @@ const jsonschema = require("jsonschema");
 const express = require("express");
 
 const { BadRequestError, ExpressError } = require("../expressError");
-const { ensureLoggedIn, isAdmin } = require("../middleware/auth");
+const { ensureLoggedIn, isAdmin, isUserOrAdmin } = require("../middleware/auth");
 const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
@@ -51,12 +51,14 @@ router.post("/", isAdmin, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
+
+    // If no valid query params provided, default to finding all companies
+    // If a query isn't minEmployees, maxEmployees, or nameLike, filtered_companies will just be all companies.
     if (Object.keys(req.query).length === 0) {
       const companies = await Company.findAll();
       return res.json({ companies });
     } else{
 
-    // Going by the assumption that queries can ONLY be minEmployees, maxEmployees, and/or nameLike
 
     const minEmployees = parseInt(req.query.minEmployees) || 0;
     const maxEmployees = parseInt(req.query.maxEmployees) || 9999999;
@@ -79,9 +81,8 @@ router.get("/", async function (req, res, next) {
     }
 
 
+    // Filter through all companies
     const companies = await Company.findAll();
-
-
     const filtered_companies = companies.filter((company) => {
 
       let passMinEmployeesCheck = true;
