@@ -120,7 +120,8 @@ class Company {
                   name,
                   description,
                   num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
+                  logo_url AS "logoUrl",
+                  (SELECT * FROM jobs) AS jobs
            FROM companies
            WHERE handle = $1`,
         [handle]);
@@ -182,7 +183,6 @@ class Company {
            RETURNING handle`,
         [handle]);
     const company = result.rows[0];
-
     if (!company) throw new NotFoundError(`No company: ${handle}`);
   }
 }
