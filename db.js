@@ -4,10 +4,6 @@ const { Client } = require("pg");
 const { DB_USERNAME, DB_PASSWORD, DB_URI, PORT } = require("./config");
 
 let db;
-
-console.log("PORT")
-console.log(PORT)
-
 db = new Client({
 
   user: DB_USERNAME,

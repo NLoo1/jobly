@@ -124,7 +124,6 @@ class Company {
     SELECT id, title, salary, equity, company_handle AS "companyHandle" FROM jobs WHERE company_handle = $1`, [handle])
     const company = companyRes.rows[0]
     const jobs = jobRes.rows
-    console.log(jobs)
 
     if (!company) throw new NotFoundError(`No company: ${handle}`, 400);
     return {company, jobs};
