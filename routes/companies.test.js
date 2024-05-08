@@ -140,7 +140,8 @@ describe("GET /companies", function () {
 
 describe("GET /companies/:handle", function () {
   test("works for anon", async function () {
-    // console.log(await Job.findAll())
+    // const resp_test = await db.query(`SELECT * FROM jobs`)
+    // console.log(resp_test.rows)
     const resp = await request(app).get(`/companies/c1`);
     expect(resp.body).toEqual(
       {"company": {"company": {"description": "Desc1", "handle": "c1", "logoUrl": "http://c1.img", "name": "C1", "numEmployees": 1}, "jobs": []}}
