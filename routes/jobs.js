@@ -46,25 +46,28 @@ router.post("/", ensureLoggedIn, isAdmin, async function (req, res, next) {
  * - hasEquity
  * - companyLike
  * - minSalary
+ * 
+ * Filters are passed as queries: http://127.0.0.1:3001/jobs?minSalary=60000
  *
  * Authorization required: none
  */
 
 router.get("/", async function (req, res, next) {
 
-  console.log(req.query)
   const { titleLike, hasEquity, companyLike, minSalary } = req.query;
 
-  // Validate parameters
+  // Validate salary.
   if (parseInt(minSalary) < 0) {
       return res.status(400).json({ error: 'Invalid salary' });
   }
+
+  // Validate equity.
   if (parseFloat(hasEquity) < 0 ) {
       return res.status(400).json({ error: 'Invalid equity' });
   }
 
   try {
-      // Get companies based on filters
+      // Get jobs based on filters
       const jobs = await Job.getJobs(titleLike, companyLike, minSalary, hasEquity);
       return res.json(jobs);
   } catch (err) {
@@ -75,7 +78,6 @@ router.get("/", async function (req, res, next) {
 /** GET /[id]  =>  { job }
  *
  *  Job is { handle, name, description, numEmployees, logoUrl, jobs }
- *  
  *
  * Authorization required: none
  */
@@ -93,7 +95,8 @@ router.get("/:id", async function (req, res, next) {
  *
  * Patches job data.
  *
- * fields can be: { title, salary, equity, company_handle }
+ * fields can be: { title, salary, equity }
+ * ID and company_handle cannot be updated.
  *
  * Returns { title, salary, equity, company_handle }
  *
@@ -103,6 +106,8 @@ router.get("/:id", async function (req, res, next) {
 router.patch("/:id", isAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, jobUpdateSchema);
+
+    // Validation
     if (!validator.valid) {
       const errs = validator.errors.map((e) => e.stack);
       throw new BadRequestError(errs);

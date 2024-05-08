@@ -1,11 +1,13 @@
 require("dotenv").config({ path: "../.env.test" });
 
+
 ("use strict");
 
 const request = require("supertest");
 
 const db = require("../db");
 const app = require("../app");
+const Job = require("../models/job")
 
 const {
   commonBeforeAll,
@@ -120,7 +122,6 @@ describe("GET /companies", function () {
     });
 
     expect(resp.body).toEqual([]);
-    // console.log(resp.body)
   });
 
   test("fails: test next() handler", async function () {
@@ -139,29 +140,18 @@ describe("GET /companies", function () {
 
 describe("GET /companies/:handle", function () {
   test("works for anon", async function () {
+    // console.log(await Job.findAll())
     const resp = await request(app).get(`/companies/c1`);
-    expect(resp.body).toEqual({
-      company: {
-        handle: "c1",
-        name: "C1",
-        description: "Desc1",
-        numEmployees: 1,
-        logoUrl: "http://c1.img",
-      },
-    });
+    expect(resp.body).toEqual(
+      {"company": {"company": {"description": "Desc1", "handle": "c1", "logoUrl": "http://c1.img", "name": "C1", "numEmployees": 1}, "jobs": []}}
+    );
   });
 
   test("works for anon: company w/o jobs", async function () {
     const resp = await request(app).get(`/companies/c2`);
-    expect(resp.body).toEqual({
-      company: {
-        handle: "c2",
-        name: "C2",
-        description: "Desc2",
-        numEmployees: 2,
-        logoUrl: "http://c2.img",
-      },
-    });
+    expect(resp.body).toEqual(
+      {"company": {"company": {"description": "Desc2", "handle": "c2", "logoUrl": "http://c2.img", "name": "C2", "numEmployees": 2}, "jobs": []}}
+    );
   });
 
   test("not found for no such company", async function () {

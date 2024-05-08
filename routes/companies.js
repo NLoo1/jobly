@@ -51,7 +51,6 @@ router.post("/", isAdmin, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
 
-  console.log(req.query)
   const { nameLike, minEmployees, maxEmployees } = req.query;
 
   // Validate parameters
