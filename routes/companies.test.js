@@ -2,8 +2,6 @@ require("dotenv").config({ path: "../.env.test" });
 
 ("use strict");
 
-// process.env.NODE_ENV = "production"
-
 const request = require("supertest");
 
 const db = require("../db");

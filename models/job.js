@@ -1,14 +1,3 @@
-/**
- * 
- * TODO ---> REFACTOR TO JOBS NOT COMPANIES
- * 
- * 
- * 
- * 
- * 
- */
-
-
 "use strict";
 
 const db = require("../db");
@@ -24,7 +13,7 @@ class Job {
    *
    * Returns { title, salary, equity, company_handle }
    *
-   * Throws BadRequestError if company already in database.
+   * Throws BadRequestError if job already in database.
    * */
 
   static async create({ title, salary, equity, company_handle }) {
@@ -71,7 +60,7 @@ class Job {
 
   static async getJobs(titleLike, companyLike, minSalary, hasEquity) {
 
-    let query = 'SELECT * FROM companies WHERE 1=1';
+    let query = 'SELECT * FROM jobs WHERE 1=1';
 
     const params = [];
 
@@ -84,24 +73,38 @@ class Job {
     };
 
     // Go through params to add conditions to query and push to params array
-    Object.keys(paramMapping).forEach((param, index) => {
-        const paramInfo = paramMapping[param];
-        const value = eval(param);
-        
-        if (value !== undefined) {
-            if(paramInfo.name === 'name') {
-                query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
-                params.push(`%${value}%`); 
-            } else {
-                query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
-                params.push(value);
-            }
-        }
-    });
+    Object.keys(paramMapping).forEach(param => {
+      const paramInfo = paramMapping[param];
+      let value;
+  
+      if (param === 'titleLike') {
+          value = titleLike;
+      } else if (param === 'companyLike') {
+          value = companyLike;
+      } else {
+          value = (param === 'minSalary') ? minSalary : hasEquity;
+      }
+  
+      // If values are defined and not null, they can be pushed to query and params
+      if (value !== undefined && value !== null) {
+        // hasEquity is treated different as a boolean
+          if (param === 'hasEquity') {
+              if (value === 'true') {
+                  query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
+                  params.push(paramInfo.value);
+              }
+          } else {
+              query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
+              params.push((paramInfo.operator === 'ILIKE') ? `%${value}%` : value);
+          }
+      }
+  });
+  
 
+    // Fetch relevant jobs
     try {
-        const companies = await db.query(query, params);
-        return companies.rows;
+        const jobs = await db.query(query, params);
+        return jobs.rows;
     } catch (error) {
         throw new Error(`Error executing query: ${error.message}`);
     }
@@ -143,6 +146,7 @@ class Job {
    */
 
   static async update(id, data) {
+
     const { setCols, values } = sqlForPartialUpdate(
         data,
         {
@@ -161,7 +165,7 @@ class Job {
     const result = await db.query(querySql, [...values, handle]);
     const job = result.rows[0];
 
-    if (!job) throw new NotFoundError(`No job: ${handle}`);
+    if (!job) throw new NotFoundError(`No job: ${id}`);
 
     return job;
   }
@@ -180,7 +184,7 @@ class Job {
         [id]);
     const job = result.rows[0];
 
-    if (!job) throw new NotFoundError(`No job: ${handle}`);
+    if (!job) throw new NotFoundError(`No job: ${id}`);
   }
 }
 

@@ -65,7 +65,7 @@ router.get("/", async function (req, res, next) {
 
   try {
       // Get companies based on filters
-      const jobs = await Company.getCompanies(titleLike, parseFloat(hasEquity), companyLike, parseInt(minSalary));
+      const jobs = await Job.getJobs(titleLike, companyLike, minSalary, hasEquity);
       return res.json(jobs);
   } catch (err) {
       return next(err)
@@ -122,7 +122,7 @@ router.patch("/:id", isAdmin, async function (req, res, next) {
 
 router.delete("/:handle", isAdmin, async function (req, res, next) {
   try {
-    await Company.remove(req.params.handle);
+    await Job.remove(req.params.handle);
     return res.json({ deleted: req.params.handle });
   } catch (err) {
     return next(err);

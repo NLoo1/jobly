@@ -69,7 +69,7 @@ class Company {
   static async getCompanies(nameLike, minEmployees, maxEmployees) {
 
     // Base query
-    // WARNING: This could be dangerous for SQL injections
+    // While this query can be dangerous by itself, parameter mapping negates this risk
     let query = 'SELECT * FROM companies WHERE 1=1';
 
     const params = [];
@@ -86,7 +86,9 @@ class Company {
         const paramInfo = paramMapping[param];
         const value = eval(param);
         
+        // If query params were passed properly
         if (value !== undefined) {
+          // Name is treated differently here as a string
             if(paramInfo.name === 'name') {
                 query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
                 params.push(`%${value}%`); // Add wildcard for ILIKE comparison
@@ -97,6 +99,7 @@ class Company {
         }
     });
 
+    // Fetch relevant companies
     try {
         const companies = await db.query(query, params);
         return companies.rows;
