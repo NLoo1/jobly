@@ -41,6 +41,13 @@ Jobly is defined with 3 routes, with further sub-routes
 	- GET /users/[username]- returns info about a specific user.
 	- PATCH /users/[username]- admin or same user only. Updates info about user. 
 	- DELETE /users/[username]- admin or same user only. Deletes user.
+	
+	**/users also has another sub-route, /jobs**:
+	- GET /users/[username]/jobs - this will return all the job applications that belong to a user.
+	- POST /users/[username]/jobs/[id] - Referencing a job's ID, an application will be created under the user. 
+	- DELETE /users/[username]/jobs/[id] - Deletes a job application.
+	- DELETE /users/[username]/jobs - Deletes all job applications under that user.
+
 - **/jobs**
 	- /GET - returns all jobs.
 	- /POST - admin only. add a job. Must pass JSON object: `{ title, salary, equity, company_handle }`

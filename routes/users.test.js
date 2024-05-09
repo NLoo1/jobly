@@ -384,6 +384,31 @@ describe('DELETE /[username]/jobs/:id', () => {
 
     expect(r.body).toEqual({jobs: []})
   })
+  
+  test('deletes all of user job apps', async () => {
+
+    // Add job to delete
+    const addJob = await request(app)
+    .post(`/users/u1/jobs/1`)
+    .set("authorization", `Bearer ${u1Token}`)
+    .send({
+      "username": "u1",
+      "job_id": 1
+    })
+    expect(addJob.body).toEqual({"applied": "1"})
+
+    const resp = await request(app)
+    .delete(`/users/u1/jobs`)
+    .set("authorization", `Bearer ${u1Token}`)
+    .send({
+      "username": "u1"
+    })
+    
+    const r = await request(app).get(`/users/u1/jobs`)
+    .set("authorization", `Bearer ${u1Token}`)
+
+    expect(r.body).toEqual({jobs: []})
+  })
 })
 
 describe('GET /[username]/jobs', () => {

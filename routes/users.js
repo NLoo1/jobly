@@ -151,7 +151,7 @@ router.post("/:username/jobs/:id", isUserOrAdmin, async function(req,res,next){
 
 /** DELETE /[username]/jobs/:id => { deleted: jobId }
  *
- * Returns job apps.
+ * Deletes job apps by id.
  *
  * Authorization required: admin or same user
  **/
@@ -159,6 +159,20 @@ router.delete("/:username/jobs/:id", isUserOrAdmin, async function(req,res,next)
   try{
     const del = await User.deleteJobApp(req.params.username, req.params.id)
     return res.json({deleted: req.params.id})
+  } catch(err){
+    return next(err)
+  }
+})
+/** DELETE /[username]/jobs =>
+ *
+ * Deletes all job apps under user.
+ *
+ * Authorization required: admin or same user
+ **/
+router.delete("/:username/jobs/", isUserOrAdmin, async function(req,res,next){
+  try{
+    const del = await User.deleteUserJobApps(req.params.username)
+    return res.json({deleted_jobs: req.params.username})
   } catch(err){
     return next(err)
   }
