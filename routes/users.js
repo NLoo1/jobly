@@ -12,6 +12,7 @@ const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
+const applicationNewSchema = require("../schemas/applicationNew.json")
 
 const router = express.Router();
 
@@ -136,6 +137,11 @@ router.delete("/:username", isUserOrAdmin, async function (req, res, next) {
  **/
 router.post("/:username/jobs/:id", isUserOrAdmin, async function(req,res,next){
   try{
+    const validator = jsonschema.validate(req.body, applicationNewSchema);
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
     const apply = await User.addJobApp(req.params.username, req.params.id)
     return res.json({applied: req.params.id})
   } catch(err){
@@ -149,14 +155,14 @@ router.post("/:username/jobs/:id", isUserOrAdmin, async function(req,res,next){
  *
  * Authorization required: admin or same user
  **/
-router.delete("/:username/jobs/:id"), isUserOrAdmin, async function(req,res,next){
+router.delete("/:username/jobs/:id", isUserOrAdmin, async function(req,res,next){
   try{
     const del = await User.deleteJobApp(req.params.username, req.params.id)
     return res.json({deleted: req.params.id})
   } catch(err){
     return next(err)
   }
-}
+})
 
 /** GET /[username]/jobs => { user, jobs: jobApps }
  *
