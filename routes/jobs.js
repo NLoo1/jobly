@@ -113,7 +113,7 @@ router.patch("/:id", isAdmin, async function (req, res, next) {
       throw new BadRequestError(errs);
     }
 
-    const job = await Job.update(req.params.handle, req.body);
+    const job = await Job.update(req.params.id, req.body);
     return res.json({ job });
   } catch (err) {
     return next(err);
@@ -125,10 +125,10 @@ router.patch("/:id", isAdmin, async function (req, res, next) {
  * Authorization: admin
  */
 
-router.delete("/:handle", isAdmin, async function (req, res, next) {
+router.delete("/:id", isAdmin, async function (req, res, next) {
   try {
-    await Job.remove(req.params.handle);
-    return res.json({ deleted: req.params.handle });
+    await Job.remove(req.params.id);
+    return res.json({ deleted: req.params.id });
   } catch (err) {
     return next(err);
   }

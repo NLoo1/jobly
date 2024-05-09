@@ -23,6 +23,7 @@ class Job {
            WHERE title = $1 AND company_handle=$2`,
         [title, company_handle]);
 
+
     if (duplicateCheck.rows[0])
       throw new BadRequestError(`Duplicate job: ${title}, ${company_handle}`);
 
@@ -30,11 +31,10 @@ class Job {
           `INSERT INTO jobs
            (title, salary, equity, company_handle)
            VALUES ($1, $2, $3, $4)
-           RETURNING title, salary, equity, company_handle`,
-        [
-            title, salary, equity, company_handle
-        ],
+           RETURNING id, title, salary, equity, company_handle`,
+        [title, salary, equity, company_handle]
     );
+
     const job = result.rows[0];
 
     return job;
@@ -59,47 +59,32 @@ class Job {
    * */
 
   static async getJobs(titleLike, companyLike, minSalary, hasEquity) {
-
     let query = 'SELECT * FROM jobs WHERE 1=1';
-
     const params = [];
 
-    // Map possible params
-    const paramMapping = {
-        titleLike: { name: 'title', operator: 'ILIKE' },
-        companyLike: { name: 'company_handle', operator: 'ILIKE' },
-        minSalary: { name: 'salary', operator: '>=' },
-        hasEquity: {name: 'equity', operator: (hasEquity ? '>' : '>='), value: (hasEquity ? 0 : null)}
-    };
+    // If hasEquity is the only parameter provided, handle it separately
+    if (titleLike === undefined && companyLike === undefined && minSalary === undefined && hasEquity !== undefined) {
+        query += ` AND equity ${hasEquity ? '>' : '='} 0`;
+    } else {
+        // Map possible params
+        const paramMapping = {
+            titleLike: { name: 'title', operator: 'ILIKE' },
+            companyLike: { name: 'company_handle', operator: 'ILIKE' },
+            minSalary: { name: 'salary', operator: '>=' }
+        };
 
-    // Go through params to add conditions to query and push to params array
-    Object.keys(paramMapping).forEach(param => {
-      const paramInfo = paramMapping[param];
-      let value;
-  
-      if (param === 'titleLike') {
-          value = titleLike;
-      } else if (param === 'companyLike') {
-          value = companyLike;
-      } else {
-          value = (param === 'minSalary') ? minSalary : hasEquity;
-      }
-  
-      // If values are defined and not null, they can be pushed to query and params
-      if (value !== undefined && value !== null) {
-        // hasEquity is treated different as a boolean
-          if (param === 'hasEquity') {
-              if (value === 'true') {
-                  query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
-                  params.push(paramInfo.value);
-              }
-          } else {
-              query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
-              params.push((paramInfo.operator === 'ILIKE') ? `%${value}%` : value);
-          }
-      }
-  });
-  
+        // Add conditions to query and push params to array
+        Object.keys(paramMapping).forEach(param => {
+            const paramInfo = paramMapping[param];
+            let value = (param === 'titleLike') ? titleLike : (param === 'companyLike') ? companyLike : minSalary;
+
+            // If values are defined and not null, add them to query and params array
+            if (value !== undefined && value !== null) {
+                query += ` AND ${paramInfo.name} ${paramInfo.operator} $${params.length + 1}`;
+                params.push((paramInfo.operator === 'ILIKE') ? `%${value}%` : value);
+            }
+        });
+    }
 
     // Fetch relevant jobs
     try {
@@ -159,10 +144,11 @@ class Job {
 
     const querySql = `UPDATE jobs 
                       SET ${setCols} 
-                      WHERE jobs = ${idVarIdx} 
+                      WHERE id = ${idVarIdx} 
                       RETURNING title, salary, equity, company_handle AS "companyHandle"
                       `
-    const result = await db.query(querySql, [...values, handle]);
+    const result = await db.query(querySql, [...values, id]);
+
     const job = result.rows[0];
 
     if (!job) throw new NotFoundError(`No job: ${id}`);
