@@ -54,7 +54,8 @@ router.post("/", isAdmin, async function (req, res, next) {
 router.get("/", isAdmin, async function (req, res, next) {
   try {
     const users = await User.findAll();
-    return res.json({ users });
+    const jobApps = await User.getAllUserJobApps()
+    return res.json({ users, jobApps});
   } catch (err) {
     return next(err);
   }
@@ -71,7 +72,8 @@ router.get("/", isAdmin, async function (req, res, next) {
 router.get("/:username", isUserOrAdmin, async function (req, res, next) {
   try {
     const user = await User.get(req.params.username);
-    return res.json({ user });
+    const jobApps = await User.getAllJobApps(req.params.username)
+    return res.json({ user, jobs: jobApps });
   } catch (err) {
     return next(err);
   }
@@ -111,6 +113,9 @@ router.patch("/:username", isUserOrAdmin, async function (req, res, next) {
 
 router.delete("/:username", isUserOrAdmin, async function (req, res, next) {
   try {
+    // Delete all job apps from user
+    // await db.query(`DELETE FROM applications WHERE username=$1`, [username])
+
     await User.remove(req.params.username);
     return res.json({ deleted: req.params.username });
   } catch (err) {

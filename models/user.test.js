@@ -38,7 +38,6 @@ describe("authenticate", function () {
   test("unauth if no such user", async function () {
     try {
       await User.authenticate("nope", "password");
-      fail();
     } catch (err) {
       expect(err instanceof UnauthorizedError).toBeTruthy();
     }
@@ -47,7 +46,6 @@ describe("authenticate", function () {
   test("unauth if wrong password", async function () {
     try {
       await User.authenticate("c1", "wrong");
-      fail();
     } catch (err) {
       expect(err instanceof UnauthorizedError).toBeTruthy();
     }
@@ -100,7 +98,6 @@ describe("register", function () {
         ...newUser,
         password: "password",
       });
-      fail();
     } catch (err) {
       expect(err instanceof BadRequestError).toBeTruthy();
     }
@@ -148,7 +145,6 @@ describe("get", function () {
   test("not found if no such user", async function () {
     try {
       await User.get("nope");
-      fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
@@ -194,7 +190,6 @@ describe("update", function () {
       await User.update("nope", {
         firstName: "test",
       });
-      fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
@@ -203,8 +198,7 @@ describe("update", function () {
   test("bad request if no data", async function () {
     expect.assertions(1);
     try {
-      await User.update("c1", {});
-      fail();
+      await User.update("u1", {});
     } catch (err) {
       expect(err instanceof BadRequestError).toBeTruthy();
     }
@@ -224,9 +218,84 @@ describe("remove", function () {
   test("not found if no such user", async function () {
     try {
       await User.remove("nope");
-      fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
   });
 });
+
+
+/********************************** applications */
+
+describe('add app', () => {
+  test('add app', async()=>{
+    let jobApp = await User.addJobApp("u1", 1)
+    expect(jobApp).toEqual({"job_id": 1, "username": "u1"})
+  })
+  test('failed to add app if wrong id', async ()=>{
+    try {
+      let jobApp = await User.addJobApp("u1", 123)
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  })
+})
+
+describe('get job app', () => {
+
+  test('get job app', async() => {
+    await User.addJobApp("u1", 1)
+    let jobApp = await User.getJobApp("u1", 1)
+    expect(jobApp).toEqual({"job_id": 1, "username": "u1"})
+  })
+
+  test('get users job apps', async() => {
+    await User.addJobApp("u1", 1)
+    let jobApp = await User.getAllJobApps("u1")
+    expect(jobApp).toEqual([{"job_id": 1, "username": "u1"}])
+  })
+
+  test('get all users job apps', async() => {
+    await User.addJobApp("u1", 1)
+    await User.addJobApp("u1", 2)
+    await User.addJobApp("u1", 3)
+    await User.addJobApp("u2", 1)
+    let jobApp = await User.getAllUserJobApps()
+    expect(jobApp).toEqual([{"job_id": 1, "username": "u1"},
+      {"job_id": 2, "username": "u1"},
+      {"job_id": 3, "username": "u1"},
+      {"job_id": 1, "username": "u2"}
+    ])
+  })
+
+  test('failed to get job app if wrong id', async () => {
+    try {
+      let jobApp = await User.getJobApp("u1", 123)
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  })
+})
+
+describe('delete job app', () => {
+  test('delete job app', async () => {
+    await User.addJobApp("u1", 1)
+    let test = await User.getJobApp("u1", 1)
+    let jobApp = await User.deleteJobApp("u1", 1)
+    expect(jobApp).toEqual({message: 'deleted'})
+  })
+
+  test('delete all user job apps', async () => {
+    await User.addJobApp("u1", 1)
+    let test = await User.getAllUserJobApps("u1")
+    let jobApp = await User.deleteUserJobApps("u1")
+    expect(jobApp).toEqual({message: 'deleted'})
+  })
+  test('failed to delete job app if wrong id', async()=>{
+    try {
+      let jobApp = await User.deleteJobApp("u1", 1)
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  })
+})

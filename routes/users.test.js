@@ -120,6 +120,7 @@ describe("GET /users", function () {
         .get("/users")
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.body).toEqual({
+      jobApps: [],
       users: [
         {
           username: "u1",
@@ -178,7 +179,7 @@ describe("GET /users/:username", function () {
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: true,
-      },
+      }, jobs: []
     });
   });
 
@@ -203,7 +204,7 @@ describe("PATCH /users/:username", () => {
     const resp = await request(app)
         .patch(`/users/u1`)
         .send({
-          firstName: "New",
+          firstName: "New"
         })
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.body).toEqual({
@@ -213,7 +214,7 @@ describe("PATCH /users/:username", () => {
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: true,
-      },
+      }
     });
   });
 
@@ -290,3 +291,8 @@ describe("DELETE /users/:username", function () {
     expect(resp.statusCode).toEqual(404);
   });
 });
+
+
+/*********************APPLICATIONS */
+
+// describe('')

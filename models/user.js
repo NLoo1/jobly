@@ -204,6 +204,98 @@ class User {
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
   }
+
+
+  /**
+   * Adds job application to database.
+   * @param {string} username 
+   * @param {Integer} jobId 
+   * @returns application if added. Error if job cannot be found
+   */
+
+  static async addJobApp(username, jobId){
+    let jobCheck = await db.query(`SELECT * FROM jobs WHERE id=$1`, [jobId])
+    if(!jobCheck.rows[0]) throw new NotFoundError(`Job not found ${jobId}`)
+
+    let result = await db.query(`
+    INSERT INTO applications (username, job_id)
+    VALUES ($1, $2) RETURNING username, job_id`, [username, jobId])
+    const application = result.rows[0]
+    
+    return application
+  }
+
+  /**
+   * Returns job app for a user if it exists
+   * @param {string} username 
+   * @param {Integer} jobId 
+   * @returns a job app.
+   */
+  static async getJobApp(username, jobId){
+    let jobCheck = await db.query(`SELECT * FROM applications WHERE username=$1 AND job_id=$2`, [username,jobId])
+    if(!jobCheck.rows[0]) throw new NotFoundError(`Application not found for ${username} for job ${jobId}`)
+    return jobCheck.rows[0]
+  }
+
+  /**
+   * Returns all job apps for a user if it exists
+   * @param {string} username 
+   * @returns all job apps.
+   */
+  static async getAllJobApps(username){
+    let jobCheck = await db.query(`SELECT * FROM applications WHERE username=$1`, [username])
+    return jobCheck.rows
+  }
+
+  /**
+   * Returns all user job apps
+   * @returns all job apps for all users.
+   */
+  static async getAllUserJobApps(username){
+    let jobCheck = await db.query(`SELECT * FROM applications`)
+    return jobCheck.rows
+  }
+
+
+  // /**
+  //  * Patch job apps with an updated username. 
+  //  * Only usernames will be used to patch, as changing the job ID effectively just creates a new application.
+  //  * 
+  //  * @param {*} username 
+  //  * @param {*} oldUsername 
+  //  * @returns patched job app.
+  //  */
+  // static async patchJobApp(username, oldUsername){
+  //   let jobCheck = await db.query(`UPDATE applications SET username= `)
+  // }
+
+
+  /**
+   * Deletes a job app for a user.
+   * @param {*} username 
+   * @param {*} jobId 
+   * @returns mesage if successfully deleted.
+   */
+  static async deleteJobApp(username, jobId){
+    try{
+      let jobCheck = await db.query(`DELETE FROM applications WHERE username=$1 AND job_id=$2`, [username,jobId])
+      return {message: "deleted"}
+    } catch(err){
+      return err
+    }
+  }
+
+  static async deleteUserJobApps(username){
+    try{
+      let jobCheck = await db.query(`DELETE FROM applications WHERE username=$1`, [username])
+      return {message: "deleted"}
+    } catch(err){
+      return err
+    }
+  }
+
+
+
 }
 
 
