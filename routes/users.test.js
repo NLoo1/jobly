@@ -295,4 +295,98 @@ describe("DELETE /users/:username", function () {
 
 /*********************APPLICATIONS */
 
-// describe('')
+
+/**
+ * TODO:
+ * DELETE /[username]/jobs/:id
+ * GET /[username]/jobs
+ */
+
+describe('POST /[username]/jobs/:id', () => {
+  test('posts job application for user based on job ID', async () => {
+    const resp = await request(app)
+    .post(`/users/u1/jobs/1`)
+    .set("authorization", `Bearer ${u1Token}`)
+    .send({
+      "username": "u1",
+      "job_id": 1
+    })
+    expect(resp.body).toEqual({"applied": "1"})
+  })
+
+  test('throws error if job not found', async () => {
+    const resp = await request(app)
+    .post(`/users/u1/jobs/123`)
+    .set("authorization", `Bearer ${u1Token}`)
+    .send({
+      "username": "u1",
+      "job_id": 123
+    })
+
+    expect(resp.statusCode).toBe(404)
+  })
+
+
+})
+
+describe('GET /[username]/jobs/:id', () => {
+  test('get job app by id', async () => {
+    const resp = await request(app)
+    .post(`/users/u1/jobs/1`)
+    .set("authorization", `Bearer ${u1Token}`)
+    .send({
+      "username": "u1",
+      "job_id": 1
+    })
+    expect(resp.body).toEqual({"applied": "1"})
+    
+    const g = await request(app).get(`/users/u1/jobs/1`)
+    .set("authorization", `Bearer ${u1Token}`)
+
+    expect(g.body).toEqual({ job: { username: 'u1', job_id: 1 } }  )
+  })
+
+  test('get job app by nonexistent id', async () => {
+    const resp = await request(app)
+    .get(`/users/u1/jobs/1234`)
+    .set("authorization", `Bearer ${u1Token}`)
+
+    expect(resp.statusCode).toBe(404)
+  })
+
+
+})
+
+describe('DELETE /[username]/jobs/:id', () => {
+
+  test('deletes job app', async () => {
+
+    const r = await request(app)
+    .delete(`/users/u1/jobs/1`)
+    .set("authorization", `Bearer ${u1Token}`)
+    .send({
+      "username": "u1",
+      "job_id": 1
+    })
+
+    expect(r.body).toEqual({message: "Deleted"})
+  })
+})
+
+describe('GET /[username]/jobs', () => {
+  test('get job apps', async () => {
+
+    const resp = await request(app)
+    .post(`/users/u1/jobs/1`)
+    .set("authorization", `Bearer ${u1Token}`)
+    .send({
+      "username": "u1",
+      "job_id": 1
+    })
+
+    const g = await request(app)
+    .get(`/users/u1/jobs/`)
+    .set("authorization", `Bearer ${u1Token}`)
+
+    expect(g.body).toEqual( {"jobs": [{"job_id": 1, "username": "u1"}]})
+  })})

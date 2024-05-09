@@ -5,6 +5,7 @@
 const jsonschema = require("jsonschema");
 
 const express = require("express");
+const db = require("../db")
 const { ensureLoggedIn, isAdmin, isUserOrAdmin } = require("../middleware/auth");
 const { BadRequestError } = require("../expressError");
 const User = require("../models/user");
@@ -80,6 +81,7 @@ router.get("/:username", isUserOrAdmin, async function (req, res, next) {
 });
 
 
+
 /** PATCH /[username] { user } => { user }
  *
  * Data can include:
@@ -114,7 +116,7 @@ router.patch("/:username", isUserOrAdmin, async function (req, res, next) {
 router.delete("/:username", isUserOrAdmin, async function (req, res, next) {
   try {
     // Delete all job apps from user
-    // await db.query(`DELETE FROM applications WHERE username=$1`, [username])
+    await db.query(`DELETE FROM applications WHERE username=$1`, [req.params.username])
 
     await User.remove(req.params.username);
     return res.json({ deleted: req.params.username });
@@ -124,4 +126,69 @@ router.delete("/:username", isUserOrAdmin, async function (req, res, next) {
 });
 
 
+/******************** APPLICATION ROUTES */
+
+/** POST /[username]/jobs/:id => { applied: jobId }
+ *
+ * Returns job apps.
+ *
+ * Authorization required: admin or same user
+ **/
+router.post("/:username/jobs/:id", isUserOrAdmin, async function(req,res,next){
+  try{
+    const apply = await User.addJobApp(req.params.username, req.params.id)
+    return res.json({applied: req.params.id})
+  } catch(err){
+    return next(err)
+  }
+})
+
+/** DELETE /[username]/jobs/:id => { deleted: jobId }
+ *
+ * Returns job apps.
+ *
+ * Authorization required: admin or same user
+ **/
+router.delete("/:username/jobs/:id"), isUserOrAdmin, async function(req,res,next){
+  try{
+    const del = await User.deleteJobApp(req.params.username, req.params.id)
+    return res.json({deleted: req.params.id})
+  } catch(err){
+    return next(err)
+  }
+}
+
+/** GET /[username]/jobs => { user, jobs: jobApps }
+ *
+ * Returns job apps.
+ *
+ * Authorization required: admin or same user
+ **/
+router.get("/:username/jobs", isUserOrAdmin, async function (req, res, next) {
+  try {
+    const jobApps = await User.getAllJobApps(req.params.username)
+    return res.json({jobs: jobApps });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+
+/** GET /[username]/jobs/:id => { job }
+ *
+ * Returns job app by id.
+ *
+ * Authorization required: admin or same user
+ **/
+router.get("/:username/jobs/:id", isUserOrAdmin, async function (req, res, next) {
+  try {
+    const jobApps = await User.getJobApp(req.params.username, req.params.id)
+    return res.json({job: jobApps });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+
 module.exports = router;
+
